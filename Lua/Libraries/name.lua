@@ -4,6 +4,9 @@ lib.initialised = false
 lib.currentRow = 1
 lib.currentCol = 1
 lib.currentSet = 1
+lib.currentScene = 1
+lib.fadeTimer = 0
+lib.nameTimer = 0
 lib.name = ""
 
 -- Characters used by each set
@@ -56,6 +59,18 @@ lib.selectedColor = {1, 1, 0}
 -- Cannot exceed 9 (CYF limit)
 -- Default: 9
 lib.maxNameLength = 9
+
+-- Sound that plays after the name is confirmed
+-- Default: mus_cymbal
+lib.confirmSound = "mus_cymbal"
+
+-- Number of frames it takes to finish after confirmation
+-- Default: 330
+lib.confirmTime = 330
+
+-- Number of frames it takes to fade in after confirmation
+-- Default: 300
+lib.fadeTime = 300
 
 local function WhiteText(center, text, ...)
 	local t = CreateText("", ...)
@@ -114,6 +129,8 @@ function lib.Start()
 
 	if not lib.hideBattle then
 		spr.Remove()
+	else
+		lib.interactable.battleCover = spr
 	end
 
 	if lib.newMusic ~= "" then
@@ -142,10 +159,27 @@ function lib.Start()
 		CreateCharset(lib.interactable.charsets[i], lib.charsets[i], yoff, lib.rowSpacings[i])
 	end
 
-	lib.interactable.name = WhiteText(false, "", {278, 346}, 640, lib.layer)
 	lib.interactable.quit = WhiteText(true, "Quit", {146, 54}, 640, lib.layer)
 	lib.interactable.backspace = WhiteText(true, "Backspace", {300, 54}, 640, lib.layer)
 	lib.interactable.done = WhiteText(true, "Done", {466, 54}, 640, lib.layer)
+
+	lib.interactable.sceneCover = CreateSprite("black", lib.layer)
+	lib.interactable.sceneCover.alpha = 0
+
+	lib.interactable.label2 = WhiteText(true, "[charspacing:2]Is this name correct?", {320, 394}, 640, lib.layer)
+	lib.interactable.label2.alpha = 0
+
+	lib.interactable.no = WhiteText(true, "No", {160, 54}, 640, lib.layer)
+	lib.interactable.no.alpha = 0
+
+	lib.interactable.yes = WhiteText(true, "Yes", {480, 54}, 640, lib.layer)
+	lib.interactable.yes.alpha = 0
+
+	lib.interactable.name = WhiteText(false, "", {278, 346}, 640, lib.layer)
+
+	lib.interactable.fader = CreateSprite("px", "Top")
+	lib.interactable.fader.alpha = 0
+	lib.interactable.fader.Scale(640, 480)
 
 	lib.Select(1, 1, 1)
 end
@@ -173,15 +207,19 @@ function lib.ColorButton(idx, color)
 		lib.interactable.backspace.color = color
 	elseif idx == 3 then
 		lib.interactable.done.color = color
+	elseif idx == 4 then
+		lib.interactable.yes.color = color
+	elseif idx == 5 then
+		lib.interactable.no.color = color
 	end
 end
 
 function lib.SelectButton(idx)
-	if lib.currentRow ~= -1 then
+	if lib.currentRow > -1 then
 		lib.ColorCharacter(lib.currentSet, lib.currentRow, lib.currentCol, lib.unselectedColor)
+		lib.currentRow = -1
 	end
 	lib.ColorButton(lib.currentCol, lib.unselectedColor)
-	lib.currentRow = -1
 	lib.currentCol = idx
 	lib.ColorButton(lib.currentCol, lib.selectedColor)
 end
@@ -233,6 +271,17 @@ function lib.MoveSelection(dr, dc)
 	end
 end
 
+function lib.RepositionName()
+	lib.interactable.name.MoveTo(278 - lib.nameTimer + math.random() * 2, 346 - lib.nameTimer/2 + math.random() * 2)
+	lib.interactable.name.Scale(1 + lib.nameTimer/50, 1 + lib.nameTimer/50)
+	lib.interactable.name.rotation = (math.random() * 2 - 1) * (1 + lib.nameTimer / 60)
+end
+
+function lib.IncreaseNameTimerAndReposition()
+	lib.nameTimer = math.min(lib.nameTimer + 1, 120)
+	lib.RepositionName()
+end
+
 function lib.MoveButtonSelection(delta)
 	local newcol = lib.currentCol + delta
 	if newcol == 0 then
@@ -249,7 +298,30 @@ function lib.Update()
 		error("Initialise the library with Start() before calling Update()!", 2)
 	end
 
-	if lib.currentRow == -1 then
+	if lib.currentRow == -4 then -- Fading
+		lib.IncreaseNameTimerAndReposition()
+		lib.fadeTimer = lib.fadeTimer + 1
+		lib.interactable.fader.alpha = lib.fadeTimer/lib.fadeTime
+		if lib.fadeTimer > lib.confirmTime then
+			lib.Finish()
+			lib.Destroy()
+			return
+		end
+	elseif lib.currentRow == -3 then -- Disallowed name
+		lib.IncreaseNameTimerAndReposition()
+	elseif lib.currentRow == -2 then -- Name confirm
+		lib.IncreaseNameTimerAndReposition()
+		if Input.Left == 1 or Input.Right == 1 then
+			lib.SelectButton(9 - lib.currentCol)
+		elseif Input.Confirm == 1 then
+			if lib.currentCol == 5 then
+				lib.ChangeScene(1)
+				lib.SelectButton(3)
+			else
+				lib.NameDone()
+			end
+		end
+	elseif lib.currentRow == -1 then -- Name input, bottom buttons
 		if Input.Confirm == 1 then
 			if lib.currentCol == 1 then
 				lib.OnQuit()
@@ -273,7 +345,7 @@ function lib.Update()
 			lib.ColorButton(lib.currentCol, lib.unselectedColor)
 			lib.Select(1, 1, 1)
 		end
-	else
+	else -- Name input
 		if Input.Confirm == 1 then
 			local i = lib.GetIndex(lib.currentRow, lib.currentCol)
 			lib.OnCharacterInput(lib.charsets[lib.currentSet]:sub(i, i))
@@ -290,6 +362,31 @@ function lib.Update()
 		elseif Input.Up == 1 then
 			lib.MoveSelection(-1, 0)
 		end
+	end
+end
+
+function lib.ChangeScene(scene)
+	if scene == 1 then -- Name input
+		lib.interactable.sceneCover.alpha = 0
+		lib.interactable.label2.alpha = 0
+		lib.interactable.yes.alpha = 0
+		lib.interactable.no.alpha = 0
+		lib.currentRow = -1
+		lib.nameTimer = 0
+		lib.RepositionName()
+		lib.interactable.name.rotation = 0
+	elseif scene == 2 then -- Name confirmation
+		lib.interactable.sceneCover.alpha = 1
+		lib.interactable.label2.alpha = 1
+		lib.interactable.yes.alpha = 1
+		lib.interactable.no.alpha = 1
+		lib.currentRow = -2
+	elseif scene == 3 then -- Disallowed name
+		lib.interactable.sceneCover.alpha = 1
+		lib.interactable.label2.alpha = 1
+		lib.currentRow = -3
+	elseif scene == 4 then -- Fading
+		lib.currentRow = -4
 	end
 end
 
@@ -316,6 +413,22 @@ function lib.OnQuit()
 end
 
 function lib.OnNameConfirm()
+	if #lib.name == 0 then
+		return
+	end
+
+	lib.ChangeScene(2)
+	lib.SelectButton(5)
+end
+
+function lib.NameDone()
+	Audio.PlaySound(lib.confirmSound)
+	Audio.Stop()
+	lib.ChangeScene(4)
+end
+
+function lib.Finish()
+	-- Dummy
 end
 
 -- Remove all objects used by the library

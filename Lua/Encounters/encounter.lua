@@ -1,5 +1,5 @@
 -- A basic encounter script skeleton that demonstrates the utility of the name library.
-name = require("name")
+nameLib = require("name")
 
 encountertext = "Poseur strikes a pose!"
 nextwaves = {"bullettest_chaserorb"}
@@ -16,14 +16,28 @@ enemypositions = {
 
 possible_attacks = {"bullettest_bouncy", "bullettest_chaserorb", "bullettest_touhou"}
 
+state = 0
+
 function EncounterStarting()
     -- Set music
-    name.newMusic = "menu"
-    name.Start()
+    nameLib.newMusic = "menu"
+    nameLib.Start()
+
+    -- Finish gets called when the library's operations are done
+    nameLib.Finish = OnFinish
+end
+
+function OnFinish()
+    state = 1
+    Player.name = nameLib.name
+    State("ACTIONSELECT")
+    Audio.LoadFile("mus_battle1")
 end
 
 function Update()
-    name.Update()
+    if state == 0 then
+        nameLib.Update()
+    end
 end
 
 function EnemyDialogueEnding()
