@@ -252,6 +252,14 @@ function lib.Update()
 			lib.MoveButtonSelection(-1)
 		elseif Input.Right == 1 then
 			lib.MoveButtonSelection(1)
+		elseif Input.Up == 1 then
+			lib.currentRow = 1
+			lib.ColorButton(lib.currentCol, lib.unselectedColor)
+			lib.Select(#lib.charsets, lib.GetRows(lib.charsets[lib.currentSet]), lib.GetLastRowColCount(lib.currentSet))
+		elseif Input.Down == 1 then
+			lib.currentRow = 1
+			lib.ColorButton(lib.currentCol, lib.unselectedColor)
+			lib.Select(1, 1, 1)
 		end
 	else
 		if Input.Confirm == 1 then
