@@ -2,15 +2,46 @@ local lib = {}
 lib.interactable = {}
 lib.initialised = false
 
-lib.charset1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" -- Characters used in the first set (default: "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-lib.charset2 = "abcdefghijklmnopqrstuvwxyz" -- Characters used in the second set; can be set to empty, to only have the first set (default: "abcdefghijklmnopqrstuvwxyz")
-lib.columns = 7 -- Number of columns per set (default: 7)
-lib.columnSpacing = -1 -- Spacing between columns; if -1, will auto-calculate to fit in the original bounds (default: 64)
-lib.rowSpacing1 = -1 -- Spacing between the first charset's rows; if -1, will auto-calculate to fit in the original bounds (default: 28)
-lib.rowSpacing2 = -1 -- Spacing between the second charset's rows; if -1, will auto-calculate to fit in the original bounds (default: 28)
-lib.layer = "Top" -- The layer at which to place the name menu (default: "Top")
-lib.hideBattle = true -- Whether to automatically hide the battle behind a black, fullscreen sprite (default: true)
-lib.newMusic = "" -- What music to change to; if left empty, will not change the music (default: "")
+-- Characters used in the first set
+-- Default: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+lib.charset1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+-- Characters used in the second set
+-- Can be set to empty, to only have the first set
+-- Default: "abcdefghijklmnopqrstuvwxyz"
+lib.charset2 = "abcdefghijklmnopqrstuvwxyz" 
+
+-- Number of columns per set
+-- Default: 7
+lib.columns = 7
+
+-- Spacing between columns
+-- If -1, will auto-calculate to fit in the original bounds
+-- Default: 64
+lib.columnSpacing = -1
+
+-- Spacing between the first charset's rows
+-- If -1, will auto-calculate to fit in the original bounds
+-- Default: 28
+lib.rowSpacing1 = -1
+
+-- Spacing between the second charset's rows
+-- If -1, will auto-calculate to fit in the original bounds
+-- Default: 28
+lib.rowSpacing2 = -1
+
+-- The layer at which to place the name menu
+-- Default: "Top"
+lib.layer = "Top"
+
+-- Whether to automatically hide the battle behind a black, fullscreen sprite
+-- Default: true
+lib.hideBattle = true
+
+-- What music to change to
+-- f left empty, will not change the music
+-- Default: ""
+lib.newMusic = ""
 
 local function WhiteText(center, text, ...)
 	local t = CreateText("", ...)
