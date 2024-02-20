@@ -146,10 +146,27 @@ function lib.ColorCharacter(set, row, col, color)
 	lib.interactable.charsets[set][lib.GetIndex(row, col)].color = color
 end
 
-function lib.Select(set, row, col)
-	if set > #lib.charsets or set < 1 then
-		return
+function lib.ColorButton(idx, color)
+	if idx == 1 then
+		lib.interactable.quit.color = color
+	elseif idx == 2 then
+		lib.interactable.backspace.color = color
+	elseif idx == 3 then
+		lib.interactable.done.color = color
 	end
+end
+
+function lib.SelectButton(idx)
+	if lib.currentRow ~= -1 then
+		lib.ColorCharacter(lib.currentSet, lib.currentRow, lib.currentCol, lib.unselectedColor)
+	end
+	lib.ColorButton(lib.currentCol, lib.unselectedColor)
+	lib.currentRow = -1
+	lib.currentCol = idx
+	lib.ColorButton(lib.currentCol, lib.selectedColor)
+end
+
+function lib.Select(set, row, col)
 	lib.ColorCharacter(lib.currentSet, lib.currentRow, lib.currentCol, lib.unselectedColor)
 	lib.currentSet = set
 	lib.currentRow = row
@@ -171,10 +188,14 @@ function lib.MoveSelection(dr, dc)
 	end
 	local newidx = lib.GetIndex(newrow, newcol)
 	if newidx > charcount then
-		if lib.currentRow == rows - 1 or newrow == rows + 1 then
-			lib.Select(lib.currentSet + 1, 1, newcol)
+		if lib.currentSet < #lib.charsets then
+			if lib.currentRow == rows - 1 or newrow == rows + 1 then
+				lib.Select(lib.currentSet + 1, 1, newcol)
+			else
+				lib.Select(lib.currentSet + 1, 1, 1)
+			end
 		else
-			lib.Select(lib.currentSet + 1, 1, 1)
+			lib.SelectButton(2)
 		end
 	elseif newidx < 1 then
 		if lib.currentSet > 1 then
@@ -184,10 +205,22 @@ function lib.MoveSelection(dr, dc)
 			else
 				lib.Select(lib.currentSet - 1, lib.GetRows(lib.charsets[lib.currentSet - 1]), math.min(newcol, cnt))
 			end
+		else
+			lib.SelectButton(2)
 		end
 	else
 		lib.Select(lib.currentSet, newrow, newcol)
 	end
+end
+
+function lib.MoveButtonSelection(delta)
+	local newcol = lib.currentCol + delta
+	if newcol == 0 then
+		newcol = 3
+	elseif newcol > 3 then
+		newcol = 1
+	end
+	lib.SelectButton(newcol)
 end
 
 -- Must be called every frame, after Start()
@@ -196,14 +229,22 @@ function lib.Update()
 		error("Initialise the library with Start() before calling Update()!", 2)
 	end
 
-	if Input.Right == 1 then
-		lib.MoveSelection(0, 1)
-	elseif Input.Left == 1 then
-		lib.MoveSelection(0, -1)
-	elseif Input.Down == 1 then
-		lib.MoveSelection(1, 0)
-	elseif Input.Up == 1 then
-		lib.MoveSelection(-1, 0)
+	if lib.currentRow == -1 then
+		if Input.Left == 1 then
+			lib.MoveButtonSelection(-1)
+		elseif Input.Right == 1 then
+			lib.MoveButtonSelection(1)
+		end
+	else
+		if Input.Right == 1 then
+			lib.MoveSelection(0, 1)
+		elseif Input.Left == 1 then
+			lib.MoveSelection(0, -1)
+		elseif Input.Down == 1 then
+			lib.MoveSelection(1, 0)
+		elseif Input.Up == 1 then
+			lib.MoveSelection(-1, 0)
+		end
 	end
 end
 
