@@ -14,8 +14,6 @@ enemypositions = {
 {0, 0}
 }
 
-possible_attacks = {"bullettest_bouncy", "bullettest_chaserorb", "bullettest_touhou"}
-
 state = 0
 
 function EncounterStarting()
@@ -41,7 +39,7 @@ function Update()
 end
 
 function EnemyDialogueEnding()
-    nextwaves = { possible_attacks[math.random(#possible_attacks)] }
+    nextwaves = {}
 end
 
 function DefenseEnding()
