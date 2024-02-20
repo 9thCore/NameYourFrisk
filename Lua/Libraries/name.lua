@@ -96,7 +96,7 @@ lib.specialNames = {
 		allowed = false
 	},
 	toriel = {
-		comment = "I think you should\nthink of your own#name, my child.",
+		comment = "I think you should\nthink of your own\nname, my child.",
 		allowed = false
 	},
 	sans = {
