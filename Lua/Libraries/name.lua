@@ -17,6 +17,14 @@ lib.charsets = {
 	"abcdefghijklmnopqrstuvwxyz"
 }
 
+-- Font used by most of the UI, excluding name and characters
+-- Default: "uidialog"
+lib.uifont = "uidialog"
+
+-- Font used by the name and characters
+-- Default: "uidialog"
+lib.namefont = "uidialog"
+
 -- Number of columns per charset
 -- Default: 7
 lib.columns = 7
@@ -189,11 +197,11 @@ lib.specialNames = {
 	}
 }
 
-local function WhiteText(center, text, ...)
+local function WhiteText(center, font, text, ...)
 	local t = CreateText("", ...)
 	t.color = {1, 1, 1}
 	t.HideBubble()
-	t.SetFont("uidialog")
+	t.SetFont(font)
 	t.linePrefix = "[instant][effect:none]"
 	t.SetText(text)
 	t.progressmode = "none"
@@ -209,7 +217,7 @@ local function CreateCharset(result, charset, yoff, spacing)
 	for i = 1, rows do
 		for j = 1, cols do
 			local idx = lib.GetIndex(i, j)
-			result[idx] = WhiteText(true, "[effect:shake, 0.6]" .. charset:sub(idx, idx), {320 + (j - cols/2 - 0.5) * lib.columnSpacing, 304 + yoff - (i - 1) * spacing}, 640, lib.layer)
+			result[idx] = WhiteText(true, lib.namefont, "[effect:shake, 0.6]" .. charset:sub(idx, idx), {320 + (j - cols/2 - 0.5) * lib.columnSpacing, 304 + yoff - (i - 1) * spacing}, 640, lib.layer)
 		end
 	end
 end
@@ -264,7 +272,7 @@ function lib.Start()
 		end
 	end
 
-	lib.interactable.label = WhiteText(true, "[charspacing:2]Name the fallen human.", {320, 394}, 640, lib.layer)
+	lib.interactable.label = WhiteText(true, lib.uifont, "[charspacing:2]Name the fallen human.", {320, 394}, 640, lib.layer)
 
 	local yoff = 0
 	lib.interactable.charsets = {}
@@ -276,26 +284,26 @@ function lib.Start()
 		CreateCharset(lib.interactable.charsets[i], lib.charsets[i], yoff, lib.rowSpacings[i])
 	end
 
-	lib.interactable.quit = WhiteText(true, "Quit", {146, 54}, 640, lib.layer)
-	lib.interactable.backspace = WhiteText(true, "Backspace", {300, 54}, 640, lib.layer)
-	lib.interactable.done = WhiteText(true, "Done", {466, 54}, 640, lib.layer)
+	lib.interactable.quit = WhiteText(true, lib.uifont, "Quit", {146, 54}, 640, lib.layer)
+	lib.interactable.backspace = WhiteText(true, lib.uifont, "Backspace", {300, 54}, 640, lib.layer)
+	lib.interactable.done = WhiteText(true, lib.uifont, "Done", {466, 54}, 640, lib.layer)
 
 	lib.interactable.sceneCover = CreateSprite("black", lib.layer)
 	lib.interactable.sceneCover.alpha = 0
 
-	lib.interactable.label2 = WhiteText(true, "[charspacing:2]Is this name correct?", {320, 394}, 640, lib.layer)
+	lib.interactable.label2 = WhiteText(true, lib.uifont, "[charspacing:2]Is this name correct?", {320, 394}, 640, lib.layer)
 	lib.interactable.label2.alpha = 0
 
-	lib.interactable.no = WhiteText(true, "No", {160, 54}, 640, lib.layer)
+	lib.interactable.no = WhiteText(true, lib.uifont, "No", {160, 54}, 640, lib.layer)
 	lib.interactable.no.alpha = 0
 
-	lib.interactable.yes = WhiteText(true, "Yes", {480, 54}, 640, lib.layer)
+	lib.interactable.yes = WhiteText(true, lib.uifont, "Yes", {480, 54}, 640, lib.layer)
 	lib.interactable.yes.alpha = 0
 
-	lib.interactable.goback = WhiteText(true, "Go back", {160, 54}, 640, lib.layer)
+	lib.interactable.goback = WhiteText(true, lib.uifont, "Go back", {160, 54}, 640, lib.layer)
 	lib.interactable.goback.alpha = 0
 
-	lib.interactable.name = WhiteText(false, "", {278, 346}, 640, lib.layer)
+	lib.interactable.name = WhiteText(false, lib.namefont, "", {278, 346}, 640, lib.layer)
 
 	lib.interactable.fader = CreateSprite("px", "Top")
 	lib.interactable.fader.alpha = 0
