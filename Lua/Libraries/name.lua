@@ -57,7 +57,7 @@ lib.layer = "Top"
 lib.hideBattle = true
 
 -- What music to change to
--- f left empty, will not change the music
+-- If left empty, will not change the music
 -- Default: ""
 lib.newMusic = ""
 
