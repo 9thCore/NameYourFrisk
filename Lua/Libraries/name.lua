@@ -2,16 +2,15 @@ local lib = {}
 lib.interactable = {}
 lib.initialised = false
 
--- Characters used in the first set
--- Default: "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-lib.charset1 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+-- Characters used by each set
+-- Number of entries dictates the number of charsets
+-- There must be at least one charset
+lib.charsets = {
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	"abcdefghijklmnopqrstuvwxyz"
+}
 
--- Characters used in the second set
--- Can be set to empty, to only have the first set
--- Default: "abcdefghijklmnopqrstuvwxyz"
-lib.charset2 = "abcdefghijklmnopqrstuvwxyz" 
-
--- Number of columns per set
+-- Number of columns per charset
 -- Default: 7
 lib.columns = 7
 
@@ -20,15 +19,13 @@ lib.columns = 7
 -- Default: 64
 lib.columnSpacing = -1
 
--- Spacing between the first charset's rows
+-- Spacing between each charset's rows
 -- If -1, will auto-calculate to fit in the original bounds
--- Default: 28
-lib.rowSpacing1 = -1
-
--- Spacing between the second charset's rows
--- If -1, will auto-calculate to fit in the original bounds
--- Default: 28
-lib.rowSpacing2 = -1
+-- Number of entries must be equal to the number of charsets
+lib.rowSpacings = {
+	-1,
+	-1
+}
 
 -- The layer at which to place the name menu
 -- Default: "Top"
@@ -80,6 +77,14 @@ function lib.Start()
 		error("'" .. lib.layer .. "' is not a valid layer!", 2)
 	end
 
+	if #lib.charsets < 1 then
+		error("There must be at least one charset!", 2)
+	end
+
+	if #lib.rowSpacings ~= #lib.charsets then
+		error("Number of entries in rowSpacings (" .. #lib.rowSpacings .. ") must be equal to the number of entries in charsets (" .. #lib.charsets .. ")!", 2)
+	end
+
 	if not lib.hideBattle then
 		spr.Remove()
 	end
@@ -92,20 +97,23 @@ function lib.Start()
 		lib.columnSpacing = 448 / lib.columns
 	end
 
-	if lib.rowSpacing1 == -1 then
-		lib.rowSpacing1 = 112 / GetRows(lib.charset1)
-	end
-
-	if lib.rowSpacing2 == -1 then
-		lib.rowSpacing2 = 112 / GetRows(lib.charset2)
+	for i = 1, #lib.charsets do
+		if lib.rowSpacings[i] == -1 then
+			lib.rowSpacings[i] = 224 / GetRows(lib.charsets[i]) / #lib.charsets
+		end
 	end
 
 	lib.interactable.label = WhiteText(true, "[charspacing:2]Name the fallen human.", {320, 394}, 640, lib.layer)
 
-	lib.interactable.charset1 = {}
-	lib.interactable.charset2 = {}
-	CreateCharset(lib.interactable.charset1, lib.charset1, 0, lib.rowSpacing1)
-	CreateCharset(lib.interactable.charset2, lib.charset2, -lib.rowSpacing1 * GetRows(lib.charset1) - 8, lib.rowSpacing2)
+	local yoff = 0
+	lib.interactable.charsets = {}
+	lib.interactable.charsets[1] = {}
+	CreateCharset(lib.interactable.charsets[1], lib.charsets[1], 0, lib.rowSpacings[1])
+	for i = 2, #lib.charsets do
+		yoff = yoff - lib.rowSpacings[i-1] * GetRows(lib.charsets[i-1]) - 8
+		lib.interactable.charsets[i] = {}
+		CreateCharset(lib.interactable.charsets[i], lib.charsets[i], yoff, lib.rowSpacings[i])
+	end
 
 	lib.interactable.quit = WhiteText(true, "Quit", {146, 54}, 640, lib.layer)
 	lib.interactable.backspace = WhiteText(true, "Backspace", {300, 54}, 640, lib.layer)
