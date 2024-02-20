@@ -43,6 +43,14 @@ lib.hideBattle = true
 -- Default: ""
 lib.newMusic = ""
 
+-- Color of unselected buttons (0-1)
+-- Default: {1, 1, 1}
+lib.unselectedColor = {1, 1, 1}
+
+-- Color of selected buttons (0-1)
+-- Default: {1, 1, 0}
+lib.selectedColor = {1, 1, 0}
+
 local function WhiteText(center, text, ...)
 	local t = CreateText("", ...)
 	t.color = {1, 1, 1}
@@ -134,15 +142,19 @@ function lib.GetIndex(row, col)
 	return (row - 1) * lib.columns + col
 end
 
+function lib.ColorCharacter(set, row, col, color)
+	lib.interactable.charsets[set][lib.GetIndex(row, col)].color = color
+end
+
 function lib.Select(set, row, col)
 	if set > #lib.charsets or set < 1 then
 		return
 	end
-	lib.interactable.charsets[lib.currentSet][lib.GetIndex(lib.currentRow, lib.currentCol)].color = {1, 1, 1}
+	lib.ColorCharacter(lib.currentSet, lib.currentRow, lib.currentCol, lib.unselectedColor)
 	lib.currentSet = set
 	lib.currentRow = row
 	lib.currentCol = col
-	lib.interactable.charsets[lib.currentSet][lib.GetIndex(lib.currentRow, lib.currentCol)].color = {1, 1, 0}
+	lib.ColorCharacter(lib.currentSet, lib.currentRow, lib.currentCol, lib.selectedColor)
 end
 
 function lib.MoveSelection(dr, dc)
