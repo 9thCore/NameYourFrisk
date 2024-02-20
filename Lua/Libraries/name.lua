@@ -4,6 +4,7 @@ lib.initialised = false
 lib.currentRow = 1
 lib.currentCol = 1
 lib.currentSet = 1
+lib.name = ""
 
 -- Characters used by each set
 -- Number of entries dictates the number of charsets
@@ -51,12 +52,18 @@ lib.unselectedColor = {1, 1, 1}
 -- Default: {1, 1, 0}
 lib.selectedColor = {1, 1, 0}
 
+-- Maximum name length
+-- Cannot exceed 9 (CYF limit)
+-- Default: 9
+lib.maxNameLength = 9
+
 local function WhiteText(center, text, ...)
 	local t = CreateText("", ...)
 	t.color = {1, 1, 1}
 	t.HideBubble()
 	t.SetFont("uidialog")
-	t.SetText("[instant][effect:none]" .. text)
+	t.linePrefix = "[instant][effect:none]"
+	t.SetText(text)
 	t.progressmode = "none"
 	if center then
 		t.x = t.x - t.GetTextWidth()/2
@@ -79,6 +86,8 @@ end
 function lib.Start()
 	State("NONE")
 	lib.initialised = true
+	lib.name = ""
+	lib.maxNameLength = math.min(lib.maxNameLength, 9)
 
 	local successful, spr = pcall(CreateSprite, "black", lib.layer)
 	if not successful then
@@ -123,6 +132,7 @@ function lib.Start()
 		CreateCharset(lib.interactable.charsets[i], lib.charsets[i], yoff, lib.rowSpacings[i])
 	end
 
+	lib.interactable.name = WhiteText(false, "", {278, 346}, 640, lib.layer)
 	lib.interactable.quit = WhiteText(true, "Quit", {146, 54}, 640, lib.layer)
 	lib.interactable.backspace = WhiteText(true, "Backspace", {300, 54}, 640, lib.layer)
 	lib.interactable.done = WhiteText(true, "Done", {466, 54}, 640, lib.layer)
@@ -230,12 +240,27 @@ function lib.Update()
 	end
 
 	if lib.currentRow == -1 then
+		if Input.Confirm == 1 then
+			if lib.currentCol == 1 then
+			elseif lib.currentCol == 2 then
+				lib.OnBackspaceInput()
+			elseif lib.currentCol == 3 then
+			end
+		end
+
 		if Input.Left == 1 then
 			lib.MoveButtonSelection(-1)
 		elseif Input.Right == 1 then
 			lib.MoveButtonSelection(1)
 		end
 	else
+		if Input.Confirm == 1 then
+			local i = lib.GetIndex(lib.currentRow, lib.currentCol)
+			lib.OnCharacterInput(lib.charsets[lib.currentSet]:sub(i, i))
+		elseif Input.Cancel == 1 then
+			lib.OnBackspaceInput()
+		end
+
 		if Input.Right == 1 then
 			lib.MoveSelection(0, 1)
 		elseif Input.Left == 1 then
@@ -246,6 +271,23 @@ function lib.Update()
 			lib.MoveSelection(-1, 0)
 		end
 	end
+end
+
+function lib.SetName(name)
+	lib.name = name
+	lib.interactable.name.SetText(name)
+end
+
+function lib.OnCharacterInput(char)
+	if #lib.name >= lib.maxNameLength then
+		return
+	end
+
+	lib.SetName(lib.name .. char)
+end
+
+function lib.OnBackspaceInput()
+	lib.SetName(lib.name:sub(1, -2))
 end
 
 -- Remove all objects used by the library
