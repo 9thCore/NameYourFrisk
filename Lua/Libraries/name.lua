@@ -72,6 +72,123 @@ lib.confirmTime = 330
 -- Default: 300
 lib.fadeTime = 300
 
+-- Names with custom comments about them, and optionally that disallow their usage
+-- Names are lowered to check, so all the characters must be lowercase
+lib.specialNames = {
+	frisk = {
+		comment = "WARNING: This name will\nmake your life hell.\nProceed anyway?",
+		allowed = true
+	},
+	aaaaaaaaa = {
+		comment = "Not very creative...?",
+		allowed = true
+	},
+	asgore = {
+		comment = "You cannot.",
+		allowed = false
+	},
+	toriel = {
+		comment = "I think you should\nthink of your own#name, my child.",
+		allowed = false
+	},
+	sans = {
+		comment = "nope.",
+		allowed = false
+	},
+	undyne = {
+		comment = "Get your OWN name!",
+		allowed = false
+	},
+	flowey = {
+		comment = "I already CHOSE\nthat name.",
+		allowed = false
+	},
+	chara = {
+		comment = "The true name.",
+		allowed = true
+	},
+	alphys = {
+		comment = "D-don't do that.",
+		allowed = false
+	},
+	alphy = {
+		comment = "Uh... OK?",
+		allowed = true
+	},
+	papyru = {
+		comment = "I'LL ALLOW IT!!!!",
+		allowed = true
+	},
+	napsta = {
+		comment = "...........\n(They're powerless to\nstop you.)",
+		allowed = true
+	},
+	blooky = {
+		comment = "...........\n(They're powerless to\nstop you.)",
+		allowed = true
+	},
+	murder = {
+		comment = "That's a little on-\nthe nose, isn't it...?",
+		allowed = true
+	},
+	mercy = {
+		comment = "That's a little on-\nthe nose, isn't it...?",
+		allowed = true
+	},
+	asriel = {
+		comment = "...",
+		allowed = false
+	},
+	catty = {
+		comment = "Bratty! Bratty!\nThat's MY name!",
+		allowed = true
+	},
+	bratty = {
+		comment = "Like, OK I guess.",
+		allowed = true
+	},
+	mtt = {
+		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
+		allowed = true
+	},
+	metta = {
+		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
+		allowed = true
+	},
+	mett = {
+		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
+		allowed = true
+	},
+	gerson = {
+		comment = "Wah ha ha! Why not?",
+		allowed = true
+	},
+	shyren = {
+		comment = "..?",
+		allowed = true
+	},
+	aaron = {
+		comment = "Is this name correct? ; )",
+		allowed = true
+	},
+	temmie = {
+		comment = "hOI!",
+		allowed = true
+	},
+	woshua = {
+		comment = "Clean name.",
+		allowed = true
+	},
+	jerry = {
+		comment = "Jerry.",
+		allowed = true
+	},
+	bpants = {
+		comment = "You are really scraping the\nbottom of the barrel.",
+		allowed = true
+	}
+}
+
 local function WhiteText(center, text, ...)
 	local t = CreateText("", ...)
 	t.color = {1, 1, 1}
@@ -175,6 +292,9 @@ function lib.Start()
 	lib.interactable.yes = WhiteText(true, "Yes", {480, 54}, 640, lib.layer)
 	lib.interactable.yes.alpha = 0
 
+	lib.interactable.goback = WhiteText(true, "Go back", {160, 54}, 640, lib.layer)
+	lib.interactable.goback.alpha = 0
+
 	lib.interactable.name = WhiteText(false, "", {278, 346}, 640, lib.layer)
 
 	lib.interactable.fader = CreateSprite("px", "Top")
@@ -211,6 +331,8 @@ function lib.ColorButton(idx, color)
 		lib.interactable.yes.color = color
 	elseif idx == 5 then
 		lib.interactable.no.color = color
+	elseif idx == 6 then
+		lib.interactable.goback.color = color
 	end
 end
 
@@ -272,7 +394,7 @@ function lib.MoveSelection(dr, dc)
 end
 
 function lib.RepositionName()
-	lib.interactable.name.MoveTo(278 - lib.nameTimer + math.random() * 2, 346 - lib.nameTimer/2 + math.random() * 2)
+	lib.interactable.name.MoveTo(278 - lib.nameTimer + math.random() * 2, 346 - lib.nameTimer/2 + math.random() * 2 - lib.nameTimer/120*lib.interactable.label2.GetTextHeight())
 	lib.interactable.name.Scale(1 + lib.nameTimer/50, 1 + lib.nameTimer/50)
 	lib.interactable.name.rotation = (math.random() * 2 - 1) * (1 + lib.nameTimer / 60)
 end
@@ -309,6 +431,10 @@ function lib.Update()
 		end
 	elseif lib.currentRow == -3 then -- Disallowed name
 		lib.IncreaseNameTimerAndReposition()
+		if Input.Confirm == 1 then
+			lib.ChangeScene(1)
+			lib.SelectButton(3)
+		end
 	elseif lib.currentRow == -2 then -- Name confirm
 		lib.IncreaseNameTimerAndReposition()
 		if Input.Left == 1 or Input.Right == 1 then
@@ -371,6 +497,7 @@ function lib.ChangeScene(scene)
 		lib.interactable.label2.alpha = 0
 		lib.interactable.yes.alpha = 0
 		lib.interactable.no.alpha = 0
+		lib.interactable.goback.alpha = 0
 		lib.currentRow = -1
 		lib.nameTimer = 0
 		lib.RepositionName()
@@ -384,6 +511,7 @@ function lib.ChangeScene(scene)
 	elseif scene == 3 then -- Disallowed name
 		lib.interactable.sceneCover.alpha = 1
 		lib.interactable.label2.alpha = 1
+		lib.interactable.goback.alpha = 1
 		lib.currentRow = -3
 	elseif scene == 4 then -- Fading
 		lib.currentRow = -4
@@ -401,6 +529,10 @@ function lib.OnCharacterInput(char)
 	end
 
 	lib.SetName(lib.name .. char)
+
+	if lib.name:lower() == "gaster" then
+		State("DONE")
+	end
 end
 
 function lib.OnBackspaceInput()
@@ -415,6 +547,18 @@ end
 function lib.OnNameConfirm()
 	if #lib.name == 0 then
 		return
+	end
+
+	local lower = lib.name:lower()
+	if lib.specialNames[lower] then
+		lib.interactable.label2.SetText("[charspacing:2]" .. lib.specialNames[lower].comment)
+		if not lib.specialNames[lower].allowed then
+			lib.ChangeScene(3)
+			lib.SelectButton(6)
+			return
+		end
+	else
+		lib.interactable.label2.SetText("[charspacing:2]Is this name correct?")
 	end
 
 	lib.ChangeScene(2)
