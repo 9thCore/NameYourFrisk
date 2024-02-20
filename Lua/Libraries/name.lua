@@ -82,6 +82,16 @@ local function CreateCharset(result, charset, yoff, spacing)
 	end
 end
 
+local function RecursiveDestruction(t)
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			RecursiveDestruction(v)
+		else
+			v.Remove()
+		end
+	end
+end
+
 -- Must be called once, before Update(), to initialise the name menu
 function lib.Start()
 	State("NONE")
@@ -242,9 +252,11 @@ function lib.Update()
 	if lib.currentRow == -1 then
 		if Input.Confirm == 1 then
 			if lib.currentCol == 1 then
+				lib.OnQuit()
 			elseif lib.currentCol == 2 then
 				lib.OnBackspaceInput()
 			elseif lib.currentCol == 3 then
+				lib.OnNameConfirm()
 			end
 		end
 
@@ -298,11 +310,17 @@ function lib.OnBackspaceInput()
 	lib.SetName(lib.name:sub(1, -2))
 end
 
+function lib.OnQuit()
+	lib.Destroy()
+	State("DONE")
+end
+
+function lib.OnNameConfirm()
+end
+
 -- Remove all objects used by the library
 function lib.Destroy()
-	for k, v in pairs(lib.interactable) do
-		v.Remove()
-	end
+	RecursiveDestruction(lib.interactable)
 	lib.interactable = {}
 	lib.initialised = false
 end
