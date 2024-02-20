@@ -1,3 +1,9 @@
+-- NAME YOUR FRISK
+-- v1.0
+-- 9thCore
+
+-- A library that recreates the name input menu.
+
 local lib = {}
 lib.interactable = {}
 lib.initialised = false
