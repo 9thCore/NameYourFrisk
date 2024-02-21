@@ -159,7 +159,7 @@ lib.specialNames = {
 	},
 	mtt = {
 		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
-		allowed = false,
+		allowed = true,
 		aliases = {"metta", "mett"}
 	},
 	gerson = {
