@@ -14,6 +14,7 @@ lib.currentScene = 1
 lib.fadeTimer = 0
 lib.nameTimer = 0
 lib.name = ""
+lib.aliases = nil
 
 -- Characters used by each set
 -- Number of entries dictates the number of charsets
@@ -88,6 +89,7 @@ lib.fadeTime = 300
 
 -- Names with custom comments about them, and optionally that disallow their usage
 -- Names are lowered to check, so all the characters must be lowercase
+-- If aliases is set, every name in that list will be automatically added to the map with the same properties (see napsta entry)
 lib.specialNames = {
 	frisk = {
 		comment = "WARNING: This name will\nmake your life hell.\nProceed anyway?",
@@ -135,19 +137,13 @@ lib.specialNames = {
 	},
 	napsta = {
 		comment = "...........\n(They're powerless to\nstop you.)",
-		allowed = true
-	},
-	blooky = {
-		comment = "...........\n(They're powerless to\nstop you.)",
-		allowed = true
+		allowed = true,
+		aliases = {"blooky"}
 	},
 	murder = {
 		comment = "That's a little on-\nthe nose, isn't it...?",
-		allowed = true
-	},
-	mercy = {
-		comment = "That's a little on-\nthe nose, isn't it...?",
-		allowed = true
+		allowed = true,
+		aliases = {"mercy"}
 	},
 	asriel = {
 		comment = "...",
@@ -163,15 +159,8 @@ lib.specialNames = {
 	},
 	mtt = {
 		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
-		allowed = true
-	},
-	metta = {
-		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
-		allowed = true
-	},
-	mett = {
-		comment = "OOOOH!!! ARE YOU\nPROMOTING MY BRAND?",
-		allowed = true
+		allowed = false,
+		aliases = {"metta", "mett"}
 	},
 	gerson = {
 		comment = "Wah ha ha! Why not?",
@@ -244,6 +233,7 @@ function lib.Start()
 	lib.initialised = true
 	lib.name = ""
 	lib.maxNameLength = math.min(lib.maxNameLength, 9)
+	lib.aliases = {}
 
 	local successful, spr = pcall(CreateSprite, "black", lib.layer)
 	if not successful then
@@ -266,6 +256,17 @@ function lib.Start()
 
 	if lib.newMusic ~= "" then
 		Audio.LoadFile(lib.newMusic)
+	end
+
+	for k, v in pairs(lib.specialNames) do
+		if v.aliases then
+			for i = 1, #v.aliases do
+				local t = {}
+				t.comment = v.comment
+				t.allowed = v.allowed
+				lib.aliases[v.aliases[i]] = t
+			end
+		end
 	end
 
 	if lib.columnSpacing == -1 then
@@ -537,6 +538,11 @@ function lib.SetName(name)
 	lib.interactable.name.SetText(name)
 end
 
+function lib.GetSpecialBehaviour(name)
+	name = name:lower()
+	return lib.aliases[name] or lib.specialNames[name]
+end
+
 function lib.OnCharacterInput(char)
 	if #lib.name >= lib.maxNameLength then
 		return
@@ -563,10 +569,10 @@ function lib.OnNameConfirm()
 		return
 	end
 
-	local lower = lib.name:lower()
-	if lib.specialNames[lower] then
-		lib.interactable.label2.SetText("[charspacing:2]" .. lib.specialNames[lower].comment)
-		if not lib.specialNames[lower].allowed then
+	local behaviour = lib.GetSpecialBehaviour(lib.name)
+	if behaviour then
+		lib.interactable.label2.SetText("[charspacing:2]" .. behaviour.comment)
+		if not behaviour.allowed then
 			lib.ChangeScene(3)
 			lib.SelectButton(6)
 			return
