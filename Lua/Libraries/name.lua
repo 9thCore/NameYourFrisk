@@ -471,6 +471,8 @@ function lib.Update()
 			elseif lib.currentCol == 3 then
 				lib.OnNameConfirm()
 			end
+		elseif Input.Cancel == 1 then
+			lib.OnBackspaceInput()
 		end
 
 		if Input.Left == 1 then
