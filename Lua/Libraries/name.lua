@@ -1,5 +1,5 @@
 -- NAME YOUR FRISK
--- v1.0
+-- v1.1
 -- 9thCore
 
 -- A library that recreates the name input menu.
