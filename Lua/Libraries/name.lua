@@ -192,6 +192,76 @@ lib.specialNames = {
 	}
 }
 
+-- Functions that you can override to change library behaviour
+-- If overriden in order to add additional behaviour instead of replacing it, the original contents must be copied over
+
+-- Returns either nil (meaning no special comment) or a table similar to the entries in specialNames above
+-- comment and allowed must be set for the table returned, otherwise errors might occur
+function lib.GetSpecialBehaviour(name)
+	name = name:lower()
+	return lib.aliases[name] or lib.specialNames[name]
+end
+
+-- Called every time a character is input into the name
+-- The length is not checked outside
+function lib.OnCharacterInput(char)
+	if #lib.name >= lib.maxNameLength then
+		return
+	end
+
+	lib.SetName(lib.name .. char)
+
+	if lib.name:lower() == "gaster" then
+		State("DONE")
+	end
+end
+
+-- Called every time the last character is removed
+function lib.OnBackspaceInput()
+	lib.SetName(lib.name:sub(1, -2))
+end
+
+-- Called when the player presses on Quit
+-- Useful if the mod contains a menu before the name input, for instance
+function lib.OnQuit()
+	lib.Destroy()
+	State("DONE")
+end
+
+-- Called when the player presses on Done
+function lib.OnNameConfirm()
+	if #lib.name == 0 then
+		return
+	end
+
+	local behaviour = lib.GetSpecialBehaviour(lib.name)
+	if behaviour then
+		lib.interactable.label2.SetText("[charspacing:2]" .. behaviour.comment)
+		if not behaviour.allowed then
+			lib.ChangeScene(3)
+			lib.SelectButton(6)
+			return
+		end
+	else
+		lib.interactable.label2.SetText("[charspacing:2]Is this name correct?")
+	end
+
+	lib.ChangeScene(2)
+	lib.SelectButton(5)
+end
+
+-- Called when the player confirms their name after pressing Done
+function lib.NameDone()
+	Audio.PlaySound(lib.confirmSound)
+	Audio.Stop()
+	lib.ChangeScene(4)
+end
+
+-- Called when the library finishes its actions
+function lib.Finish()
+	-- Dummy
+end
+
 local function WhiteText(center, font, text, ...)
 	local t = CreateText("", ...)
 	t.color = {1, 1, 1}
@@ -538,63 +608,6 @@ end
 function lib.SetName(name)
 	lib.name = name
 	lib.interactable.name.SetText(name)
-end
-
-function lib.GetSpecialBehaviour(name)
-	name = name:lower()
-	return lib.aliases[name] or lib.specialNames[name]
-end
-
-function lib.OnCharacterInput(char)
-	if #lib.name >= lib.maxNameLength then
-		return
-	end
-
-	lib.SetName(lib.name .. char)
-
-	if lib.name:lower() == "gaster" then
-		State("DONE")
-	end
-end
-
-function lib.OnBackspaceInput()
-	lib.SetName(lib.name:sub(1, -2))
-end
-
-function lib.OnQuit()
-	lib.Destroy()
-	State("DONE")
-end
-
-function lib.OnNameConfirm()
-	if #lib.name == 0 then
-		return
-	end
-
-	local behaviour = lib.GetSpecialBehaviour(lib.name)
-	if behaviour then
-		lib.interactable.label2.SetText("[charspacing:2]" .. behaviour.comment)
-		if not behaviour.allowed then
-			lib.ChangeScene(3)
-			lib.SelectButton(6)
-			return
-		end
-	else
-		lib.interactable.label2.SetText("[charspacing:2]Is this name correct?")
-	end
-
-	lib.ChangeScene(2)
-	lib.SelectButton(5)
-end
-
-function lib.NameDone()
-	Audio.PlaySound(lib.confirmSound)
-	Audio.Stop()
-	lib.ChangeScene(4)
-end
-
-function lib.Finish()
-	-- Dummy
 end
 
 -- Remove all objects used by the library
