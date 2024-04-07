@@ -91,8 +91,10 @@ lib.textPrefix = "[instant][effect:none]"
 
 -- Maximum name length
 -- Cannot exceed 9 (CYF limit)
--- Default: 9
-lib.maxNameLength = 9
+-- Default: 6 (Usual UNDERTALE limit)
+-- For 7-9, higher care must be put into the special names
+-- For instance, PAPYRU has a special case but PAPYRUS does not
+lib.maxNameLength = 6
 
 -- Sound that plays after the name is confirmed
 -- Default: mus_cymbal
