@@ -62,13 +62,32 @@ lib.hideBattle = true
 -- Default: ""
 lib.newMusic = ""
 
--- Color of unselected buttons (0-1)
+-- Color of unselected letters and buttons (0-1)
 -- Default: {1, 1, 1}
 lib.unselectedColor = {1, 1, 1}
 
--- Color of selected buttons (0-1)
+-- Color of selected letters and buttons (0-1)
 -- Default: {1, 1, 0}
 lib.selectedColor = {1, 1, 0}
+
+-- Color applied to every other text object
+-- Default: {1, 1, 1}
+lib.genericColor = {1, 1, 1}
+
+-- Prefix applied to every letter in the charset
+-- Adding color here disables selected letter and button highlighting (CYF)
+-- Default: "[instant][effect:shake, 0.6]"
+lib.charsetPrefix = "[instant][effect:shake, 0.6]"
+
+-- Prefix applied to the label ("Name the fallen human.", "Is this name correct?", special name comment)
+-- Color can be added freely here
+-- Default: "[instant][effect:none][charspacing:2]"
+lib.labelPrefix = "[instant][effect:none][charspacing:2]"
+
+-- Prefix applied to every other text object
+-- Color can be added freely here
+-- Default: "[instant][effect:none]"
+lib.textPrefix = "[instant][effect:none]"
 
 -- Maximum name length
 -- Cannot exceed 9 (CYF limit)
@@ -86,6 +105,19 @@ lib.confirmTime = 330
 -- Number of frames it takes to fade in after confirmation
 -- Default: 300
 lib.fadeTime = 300
+
+-- Text used by the library
+-- The inputted name cannot be edited here, nor can the special name comment (as those are editable below)
+lib.dictionary = {
+	name_the_human = "Name the fallen human.",
+	name_confirm = "Is this name correct?",
+	quit = "Quit",
+	backspace = "Backspace",
+	done = "Done",
+	yes = "Yes",
+	no = "No",
+	go_back = "Go back"
+}
 
 -- Names with custom comments about them, and optionally that disallow their usage
 -- Names are lowered to check, so all the characters must be lowercase
@@ -236,14 +268,14 @@ function lib.OnNameConfirm()
 
 	local behaviour = lib.GetSpecialBehaviour(lib.name)
 	if behaviour then
-		lib.interactable.label2.SetText("[charspacing:2]" .. behaviour.comment)
+		lib.interactable.label2.SetText(behaviour.comment)
 		if not behaviour.allowed then
 			lib.ChangeScene(3)
 			lib.SelectButton(6)
 			return
 		end
 	else
-		lib.interactable.label2.SetText("[charspacing:2]Is this name correct?")
+		lib.interactable.label2.SetText(lib.dictionary.name_confirm)
 	end
 
 	lib.ChangeScene(2)
@@ -262,17 +294,23 @@ function lib.Finish()
 	-- Dummy
 end
 
-local function WhiteText(center, font, text, ...)
+local function WhiteText(center, font, prefix, text, ...)
 	local t = CreateText("", ...)
-	t.color = {1, 1, 1}
 	t.HideBubble()
 	t.SetFont(font)
-	t.linePrefix = "[instant][effect:none]"
+	t.color = lib.genericColor
+	t.linePrefix = prefix or lib.textPrefix
 	t.SetText(text)
 	t.progressmode = "none"
 	if center then
 		t.x = t.x - t.GetTextWidth()/2
 	end
+	return t
+end
+
+local function ColorText(color, ...)
+	local t = WhiteText(...)
+	t.color = color
 	return t
 end
 
@@ -282,7 +320,7 @@ local function CreateCharset(result, charset, yoff, spacing)
 	for i = 1, rows do
 		for j = 1, cols do
 			local idx = lib.GetIndex(i, j)
-			result[idx] = WhiteText(true, lib.namefont, "[effect:shake, 0.6]" .. charset:sub(idx, idx), {320 + (j - cols/2 - 0.5) * lib.columnSpacing, 304 + yoff - (i - 1) * spacing}, 640, lib.layer)
+			result[idx] = ColorText(lib.unselectedColor, true, lib.namefont, lib.charsetPrefix, charset:sub(idx, idx), {320 + (j - cols/2 - 0.5) * lib.columnSpacing, 304 + yoff - (i - 1) * spacing}, 640, lib.layer)
 		end
 	end
 end
@@ -349,7 +387,7 @@ function lib.Start()
 		end
 	end
 
-	lib.interactable.label = WhiteText(true, lib.uifont, "[charspacing:2]Name the fallen human.", {320, 394}, 640, lib.layer)
+	lib.interactable.label = WhiteText(true, lib.uifont, lib.labelPrefix, lib.dictionary.name_the_human, {320, 394}, 640, lib.layer)
 
 	local yoff = 0
 	lib.interactable.charsets = {}
@@ -361,26 +399,26 @@ function lib.Start()
 		CreateCharset(lib.interactable.charsets[i], lib.charsets[i], yoff, lib.rowSpacings[i])
 	end
 
-	lib.interactable.quit = WhiteText(true, lib.uifont, "Quit", {146, 54}, 640, lib.layer)
-	lib.interactable.backspace = WhiteText(true, lib.uifont, "Backspace", {300, 54}, 640, lib.layer)
-	lib.interactable.done = WhiteText(true, lib.uifont, "Done", {466, 54}, 640, lib.layer)
+	lib.interactable.quit = ColorText(lib.unselectedColor, true, lib.uifont, nil, lib.dictionary.quit, {146, 54}, 640, lib.layer)
+	lib.interactable.backspace = ColorText(lib.unselectedColor, true, lib.uifont, nil, lib.dictionary.backspace, {300, 54}, 640, lib.layer)
+	lib.interactable.done = ColorText(lib.unselectedColor, true, lib.uifont, nil, lib.dictionary.done, {466, 54}, 640, lib.layer)
 
 	lib.interactable.sceneCover = CreateSprite("black", lib.layer)
 	lib.interactable.sceneCover.alpha = 0
 
-	lib.interactable.label2 = WhiteText(true, lib.uifont, "[charspacing:2]Is this name correct?", {320, 394}, 640, lib.layer)
+	lib.interactable.label2 = WhiteText(true, lib.uifont, lib.labelPrefix, lib.dictionary.name_confirm, {320, 394}, 640, lib.layer)
 	lib.interactable.label2.alpha = 0
 
-	lib.interactable.no = WhiteText(true, lib.uifont, "No", {160, 54}, 640, lib.layer)
+	lib.interactable.no = ColorText(lib.unselectedColor, true, lib.uifont, nil, lib.dictionary.no, {160, 54}, 640, lib.layer)
 	lib.interactable.no.alpha = 0
 
-	lib.interactable.yes = WhiteText(true, lib.uifont, "Yes", {480, 54}, 640, lib.layer)
+	lib.interactable.yes = ColorText(lib.unselectedColor, true, lib.uifont, nil, lib.dictionary.yes, {480, 54}, 640, lib.layer)
 	lib.interactable.yes.alpha = 0
 
-	lib.interactable.goback = WhiteText(true, lib.uifont, "Go back", {160, 54}, 640, lib.layer)
+	lib.interactable.goback = ColorText(lib.unselectedColor, true, lib.uifont, nil, lib.dictionary.go_back, {160, 54}, 640, lib.layer)
 	lib.interactable.goback.alpha = 0
 
-	lib.interactable.name = WhiteText(false, lib.namefont, "", {278, 346}, 640, lib.layer)
+	lib.interactable.name = WhiteText(false, lib.namefont, nil, "", {278, 346}, 640, lib.layer)
 
 	lib.interactable.fader = CreateSprite("px", "Top")
 	lib.interactable.fader.alpha = 0
